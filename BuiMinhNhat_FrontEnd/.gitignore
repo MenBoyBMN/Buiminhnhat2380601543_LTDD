@@ -1,0 +1,64 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ / Android Studio related
+*.iml
+*.ipr
+*.iws
+.idea/
+.gradle/
+.kotlin/
+
+# VS Code
+.vscode/
+
+# Flutter / Dart / Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Android build and sensitive keys
+/android/local.properties
+/android/.gradle/
+/android/app/debug
+/android/app/profile
+/android/app/release
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Windows Desktop
+windows/flutter/ephemeral/
+windows/runner/Debug/
+windows/runner/Release/
+windows/x64/
+
+# Linux / macOS
+linux/flutter/ephemeral/
+macos/Flutter/ephemeral/
+
+# Symbolication / Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Local environment overrides (keep .env and .env.example)
+.env*.local
+.env.production

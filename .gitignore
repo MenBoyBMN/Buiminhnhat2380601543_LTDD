@@ -1,0 +1,118 @@
+# ==============================================================================
+# MASTER GITIGNORE - SMART ATTENDANCE SYSTEM (LTDD - BUI MINH NHAT)
+# ==============================================================================
+
+# --------------------------------------------------
+# 1. VISUAL STUDIO & .NET CORE / C#
+# --------------------------------------------------
+.vs/
+.vscode/
+**/[Bb]in/
+**/[Oo]bj/
+**/[Dd]ebug/
+**/[Rr]elease/
+**/x64/
+**/x86/
+**/[Tt]est[Rr]esults/
+**/[Bb]uild/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.sln.docstates
+*.pidb
+*.vsp
+*.vspx
+*.sap
+*.dotCover
+
+# Database local files
+*.mdf
+*.ldf
+*.ndf
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded test photos (keep folder via .gitkeep)
+**/wwwroot/uploads/attendance/*
+!**/wwwroot/uploads/attendance/.gitkeep
+
+# Sensitive local ASP.NET configurations
+**/appsettings.*.local.json
+**/appsettings.Production.json
+
+# --------------------------------------------------
+# 2. FLUTTER & DART
+# --------------------------------------------------
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+**/coverage/
+.widget_preview/
+
+# --------------------------------------------------
+# 3. ANDROID NATIVE & SDK SECRETS
+# --------------------------------------------------
+**/android/.gradle/
+**/android/.kotlin/
+**/android/local.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# --------------------------------------------------
+# 4. WINDOWS DESKTOP FLUTTER
+# --------------------------------------------------
+**/windows/flutter/ephemeral/
+**/windows/runner/Debug/
+**/windows/runner/Release/
+**/windows/x64/
+
+# --------------------------------------------------
+# 5. LINUX & MACOS FLUTTER
+# --------------------------------------------------
+**/linux/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+**/Pods/
+**/.symlinks/
+
+# --------------------------------------------------
+# 6. INTELLIJ / ANDROID STUDIO / CLION
+# --------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# --------------------------------------------------
+# 7. OPERATING SYSTEM & TEMPORARY FILES
+# --------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Tt]emp/
+[Tt]mp/
+*.log
+
+# --------------------------------------------------
+# 8. ENVIRONMENT SECRETS
+# --------------------------------------------------
+.env*.local
+.env.production
+
+# --------------------------------------------------
+# 9. LOCAL DOCUMENTATION & NOTES (EXCLUDED FROM REPO)
+# --------------------------------------------------
+docs/
