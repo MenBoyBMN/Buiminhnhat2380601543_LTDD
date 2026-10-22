@@ -173,6 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
                 else
                   DropdownButtonFormField<int>(
+                    isExpanded: true,
                     initialValue: _selectedDepartmentId,
                     decoration: InputDecoration(
                       labelText: 'Phòng ban làm việc',
@@ -184,7 +185,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     items: _departments.map((d) {
                       return DropdownMenuItem<int>(
                         value: d.id,
-                        child: Text(d.name),
+                        child: Text(
+                          d.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       );
                     }).toList(),
                     onChanged: (val) => setState(() => _selectedDepartmentId = val),
@@ -193,6 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Chọn vai trò
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: _selectedRole,
                   decoration: InputDecoration(
                     labelText: 'Vai trò (Role)',
@@ -202,9 +207,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     fillColor: Colors.grey.shade50,
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'Employee', child: Text('👤 Nhân viên (Employee)')),
-                    DropdownMenuItem(value: 'Manager', child: Text('💼 Quản lý (Manager)')),
-                    DropdownMenuItem(value: 'Admin', child: Text('👑 Quản trị viên (Admin)')),
+                    DropdownMenuItem(
+                      value: 'Employee',
+                      child: Text('👤 Nhân viên (Employee)', overflow: TextOverflow.ellipsis),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Manager',
+                      child: Text('💼 Quản lý (Manager)', overflow: TextOverflow.ellipsis),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Admin',
+                      child: Text('👑 Quản trị viên (Admin)', overflow: TextOverflow.ellipsis),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _selectedRole = val);

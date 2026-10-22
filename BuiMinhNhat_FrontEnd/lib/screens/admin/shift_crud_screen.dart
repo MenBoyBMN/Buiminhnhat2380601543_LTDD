@@ -37,12 +37,35 @@ class _ShiftCrudScreenState extends State<ShiftCrudScreen> {
   }
 
   void _showAddEditDialog({ShiftModel? existing}) {
+    final formKey = GlobalKey<FormState>();
     final nameCtrl = TextEditingController(text: existing?.name ?? '');
     final startCtrl = TextEditingController(text: existing?.startTime ?? '08:00');
     final endCtrl = TextEditingController(text: existing?.endTime ?? '17:00');
     final graceCtrl = TextEditingController(text: existing?.gracePeriodMinutes.toString() ?? '15');
     bool isActive = existing?.isActive ?? true;
     bool isSaving = false;
+    String? dialogError;
+
+    Future<void> pickTime(TextEditingController controller) async {
+      final parts = controller.text.split(':');
+      TimeOfDay initial = const TimeOfDay(hour: 8, minute: 0);
+      if (parts.length == 2) {
+        final h = int.tryParse(parts[0]);
+        final m = int.tryParse(parts[1]);
+        if (h != null && m != null) {
+          initial = TimeOfDay(hour: h, minute: m);
+        }
+      }
+      final picked = await showTimePicker(
+        context: context,
+        initialTime: initial,
+      );
+      if (picked != null) {
+        final hh = picked.hour.toString().padLeft(2, '0');
+        final mm = picked.minute.toString().padLeft(2, '0');
+        controller.text = '$hh:$mm';
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -59,73 +82,192 @@ class _ShiftCrudScreenState extends State<ShiftCrudScreen> {
                 bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
               child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      existing == null ? 'Thêm Ca Làm Việc Mới' : 'Cập Nhật Ca Làm Việc',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(controller: nameCtrl, label: 'Tên ca làm (VD: Ca Sáng)'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: CustomTextField(controller: startCtrl, label: 'Giờ vào (HH:mm)', hint: '08:00')),
-                        const SizedBox(width: 8),
-                        Expanded(child: CustomTextField(controller: endCtrl, label: 'Giờ tan (HH:mm)', hint: '17:00')),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            existing == null ? 'Thêm Ca Làm Việc Mới' : 'Cập Nhật Ca Làm Việc',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (dialogError != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  dialogError!,
+                                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                       ],
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextField(
-                      controller: graceCtrl,
-                      label: 'Số phút cho phép trễ',
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      title: const Text('Kích hoạt ca làm này'),
-                      value: isActive,
-                      onChanged: (val) => setSheetState(() => isActive = val),
-                    ),
-                    const SizedBox(height: 20),
-                    CustomButton(
-                      text: existing == null ? 'Tạo Ca Làm' : 'Lưu Thay Đổi',
-                      isLoading: isSaving,
-                      onPressed: () async {
-                        if (nameCtrl.text.trim().isEmpty) return;
-                        setSheetState(() => isSaving = true);
-
-                        final shift = ShiftModel(
-                          id: existing?.id ?? 0,
-                          name: nameCtrl.text.trim(),
-                          startTime: startCtrl.text.trim(),
-                          endTime: endCtrl.text.trim(),
-                          gracePeriodMinutes: int.tryParse(graceCtrl.text) ?? 15,
-                          isActive: isActive,
-                        );
-
-                        final messenger = ScaffoldMessenger.of(context);
-                        final nav = Navigator.of(ctx);
-
-                        try {
-                          if (existing == null) {
-                            await ShiftService.create(shift);
-                          } else {
-                            await ShiftService.update(existing.id, shift);
+                      CustomTextField(
+                        controller: nameCtrl,
+                        label: 'Tên ca làm',
+                        hint: 'VD: Ca Tối, Ca Tăng Ca, Ca Gãy...',
+                        prefixIcon: Icons.badge_outlined,
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return 'Vui lòng nhập tên ca làm việc!';
                           }
-                          nav.pop();
-                          _loadShifts();
-                        } catch (e) {
-                          setSheetState(() => isSaving = false);
-                          messenger.showSnackBar(
-                            SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              controller: startCtrl,
+                              label: 'Giờ vào (HH:mm)',
+                              hint: '08:00',
+                              prefixIcon: Icons.login,
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.access_time, size: 20),
+                                onPressed: () async {
+                                  await pickTime(startCtrl);
+                                  setSheetState(() {});
+                                },
+                              ),
+                              onTap: () async {
+                                await pickTime(startCtrl);
+                                setSheetState(() {});
+                              },
+                              validator: (val) {
+                                if (val == null || val.trim().isEmpty) return 'Nhập giờ vào';
+                                final regex = RegExp(r'^\d{1,2}:\d{2}$');
+                                if (!regex.hasMatch(val.trim())) return 'HH:mm';
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: CustomTextField(
+                              controller: endCtrl,
+                              label: 'Giờ tan (HH:mm)',
+                              hint: '17:00',
+                              prefixIcon: Icons.logout,
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.access_time, size: 20),
+                                onPressed: () async {
+                                  await pickTime(endCtrl);
+                                  setSheetState(() {});
+                                },
+                              ),
+                              onTap: () async {
+                                await pickTime(endCtrl);
+                                setSheetState(() {});
+                              },
+                              validator: (val) {
+                                if (val == null || val.trim().isEmpty) return 'Nhập giờ tan';
+                                final regex = RegExp(r'^\d{1,2}:\d{2}$');
+                                if (!regex.hasMatch(val.trim())) return 'HH:mm';
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        controller: graceCtrl,
+                        label: 'Số phút cho phép trễ',
+                        hint: '15',
+                        prefixIcon: Icons.timer_outlined,
+                        keyboardType: TextInputType.number,
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) return 'Vui lòng nhập số phút trễ';
+                          final n = int.tryParse(val.trim());
+                          if (n == null || n < 0) return 'Số phút phải là số nguyên ≥ 0';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Kích hoạt ca làm này'),
+                        subtitle: Text(
+                          isActive ? 'Nhân viên có thể điểm danh theo ca này' : 'Ca làm này tạm ngưng hoạt động',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                        value: isActive,
+                        onChanged: (val) => setSheetState(() => isActive = val),
+                      ),
+                      const SizedBox(height: 20),
+                      CustomButton(
+                        text: existing == null ? 'Tạo Ca Làm' : 'Lưu Thay Đổi',
+                        isLoading: isSaving,
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) {
+                            return;
+                          }
+                          setSheetState(() {
+                            isSaving = true;
+                            dialogError = null;
+                          });
+
+                          final shift = ShiftModel(
+                            id: existing?.id ?? 0,
+                            name: nameCtrl.text.trim(),
+                            startTime: startCtrl.text.trim(),
+                            endTime: endCtrl.text.trim(),
+                            gracePeriodMinutes: int.tryParse(graceCtrl.text.trim()) ?? 15,
+                            isActive: isActive,
                           );
-                        }
-                      },
-                    ),
-                  ],
+
+                          final messenger = ScaffoldMessenger.of(context);
+                          final nav = Navigator.of(ctx);
+
+                          try {
+                            if (existing == null) {
+                              await ShiftService.create(shift);
+                            } else {
+                              await ShiftService.update(existing.id, shift);
+                            }
+                            nav.pop();
+                            _loadShifts();
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(existing == null ? 'Đã thêm ca làm việc thành công!' : 'Đã cập nhật ca làm việc!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } catch (e) {
+                            setSheetState(() {
+                              isSaving = false;
+                              dialogError = e.toString().replaceAll('Exception: ', '');
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

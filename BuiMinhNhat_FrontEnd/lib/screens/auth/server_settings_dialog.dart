@@ -68,9 +68,14 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
                   onPressed: () => _urlController.text = 'http://10.0.2.2:5000',
                 ),
                 ActionChip(
+                  avatar: const Icon(Icons.wifi, size: 16),
+                  label: const Text('Conveyor LAN (192.168.123.15:45455)'),
+                  onPressed: () => _urlController.text = 'http://192.168.123.15:45455',
+                ),
+                ActionChip(
                   avatar: const Icon(Icons.cloud, size: 16),
                   label: const Text('Conveyor Cloud'),
-                  onPressed: () => _urlController.text = 'https://',
+                  onPressed: () => _urlController.text = 'https://bigtealski73.conveyor.cloud',
                 ),
               ],
             ),

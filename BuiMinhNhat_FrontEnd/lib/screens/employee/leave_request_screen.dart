@@ -70,16 +70,17 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: leaveType,
                     decoration: const InputDecoration(
                       labelText: 'Loại nghỉ phép',
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'Annual', child: Text('Nghỉ phép năm')),
-                      DropdownMenuItem(value: 'Sick', child: Text('Nghỉ ốm đau')),
-                      DropdownMenuItem(value: 'Unpaid', child: Text('Nghỉ không lương')),
-                      DropdownMenuItem(value: 'Personal', child: Text('Việc riêng cá nhân')),
+                      DropdownMenuItem(value: 'Annual', child: Text('Nghỉ phép năm', overflow: TextOverflow.ellipsis)),
+                      DropdownMenuItem(value: 'Sick', child: Text('Nghỉ ốm đau', overflow: TextOverflow.ellipsis)),
+                      DropdownMenuItem(value: 'Unpaid', child: Text('Nghỉ không lương', overflow: TextOverflow.ellipsis)),
+                      DropdownMenuItem(value: 'Personal', child: Text('Việc riêng cá nhân', overflow: TextOverflow.ellipsis)),
                     ],
                     onChanged: (val) {
                       if (val != null) setSheetState(() => leaveType = val);

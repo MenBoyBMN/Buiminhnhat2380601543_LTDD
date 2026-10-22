@@ -51,7 +51,7 @@ namespace BuiMinhNhat_BackEnd.Helpers
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(senderEmail, senderName),
-                    Subject = "Mã xác thực đăng nhập (OTP) - Smart Attendance",
+                    Subject = $"[{otpCode}] Mã xác thực OTP đăng nhập Smart Attendance - {DateTime.Now:HH:mm:ss}",
                     Body = $@"
                         <div style='font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;'>
                             <h2 style='color: #1976D2;'>Mã Xác Thực OTP</h2>

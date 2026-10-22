@@ -187,7 +187,7 @@ namespace BuiMinhNhat_BackEnd.Controllers
                 }
             }
 
-            // 5. Cập nhật Điểm chuyên cần và Streak 🔥
+            // 5. Cập nhật Điểm chuyên cần và Streak 
             if (user.LastCheckInDate.HasValue)
             {
                 var lastDate = user.LastCheckInDate.Value.Date;
@@ -203,8 +203,27 @@ namespace BuiMinhNhat_BackEnd.Controllers
                     // Đứt chuỗi -> reset về 1
                     user.StreakCount = 1;
                 }
+                else if (today == lastDate)
+                {
+                    // Nếu đã check-out ca trước trong cùng ngày (hoặc đang test/chấm công ca tiếp theo) -> tăng Streak
+                    var hasCheckedOutToday = await _context.AttendanceRecords
+                        .AnyAsync(a => a.UserId == user.Id && a.CheckInTime >= today && a.CheckOutTime != null);
+                    if (hasCheckedOutToday)
+                    {
+                        user.StreakCount += 1;
+                    }
+                    else if (user.StreakCount <= 0)
+                    {
+                        user.StreakCount = 1;
+                    }
+                }
             }
             else
+            {
+                user.StreakCount = 1;
+            }
+
+            if (user.StreakCount <= 0)
             {
                 user.StreakCount = 1;
             }
@@ -303,12 +322,16 @@ namespace BuiMinhNhat_BackEnd.Controllers
 
             await _context.SaveChangesAsync();
 
+            var user = await _context.Users.FindAsync(userId);
+
             return Ok(new
             {
                 message = "Check-out thành công! Chúc bạn nghỉ ngơi vui vẻ.",
                 recordId = record.Id,
                 checkInTime = record.CheckInTime,
-                checkOutTime = record.CheckOutTime
+                checkOutTime = record.CheckOutTime,
+                streakCount = user?.StreakCount ?? 0,
+                totalPoints = user?.TotalPoints ?? 0
             });
         }
 

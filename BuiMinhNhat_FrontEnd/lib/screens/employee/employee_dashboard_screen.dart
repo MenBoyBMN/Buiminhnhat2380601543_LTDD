@@ -20,6 +20,9 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
   UserModel? _user;
   bool _isLoadingUser = true;
 
+  final GlobalKey<LeaderboardScreenState> _leaderboardKey = GlobalKey<LeaderboardScreenState>();
+  final GlobalKey<MyHistoryScreenState> _historyKey = GlobalKey<MyHistoryScreenState>();
+
   @override
   void initState() {
     super.initState();
@@ -27,10 +30,20 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
   }
 
   Future<void> _loadUser() async {
-    final u = await AuthService.getStoredUser();
-    if (mounted) {
+    // 1. Hiển thị ngay thông tin người dùng lưu trước đó
+    final cached = await AuthService.getStoredUser();
+    if (cached != null && mounted) {
       setState(() {
-        _user = u;
+        _user = cached;
+        _isLoadingUser = false;
+      });
+    }
+
+    // 2. Tải thông tin mới nhất từ API để Streak và Điểm thưởng luôn cập nhật tự động
+    final fresh = await AuthService.fetchProfile();
+    if (fresh != null && mounted) {
+      setState(() {
+        _user = fresh;
         _isLoadingUser = false;
       });
     }
@@ -72,7 +85,15 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(res['message'] ?? 'Check-out thành công'), backgroundColor: Colors.green),
         );
-        _loadUser();
+        if (res['streakCount'] != null && res['totalPoints'] != null) {
+          await AuthService.updateStreakAndPoints(
+            res['streakCount'] as int,
+            res['totalPoints'] as int,
+          );
+        }
+        await _loadUser();
+        _leaderboardKey.currentState?.loadLeaderboard();
+        _historyKey.currentState?.loadHistory();
       }
     } catch (e) {
       if (mounted) {
@@ -104,16 +125,22 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
               index: _currentIndex,
               children: [
                 _buildOverviewTab(),
-                const MyHistoryScreen(),
+                MyHistoryScreen(key: _historyKey),
                 const LeaveRequestScreen(),
-                const LeaderboardScreen(),
+                LeaderboardScreen(key: _leaderboardKey),
               ],
             ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (idx) {
           setState(() => _currentIndex = idx);
-          if (idx == 0) _loadUser();
+          if (idx == 0) {
+            _loadUser();
+          } else if (idx == 1) {
+            _historyKey.currentState?.loadHistory();
+          } else if (idx == 3) {
+            _leaderboardKey.currentState?.loadLeaderboard();
+          }
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Tổng quan'),
@@ -126,8 +153,11 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
   }
 
   Widget _buildOverviewTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return RefreshIndicator(
+      onRefresh: _loadUser,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -269,7 +299,9 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
                 MaterialPageRoute(builder: (_) => const CheckInScreen()),
               );
               if (refreshed == true) {
-                _loadUser();
+                await _loadUser();
+                _leaderboardKey.currentState?.loadLeaderboard();
+                _historyKey.currentState?.loadHistory();
               }
             },
             style: ElevatedButton.styleFrom(
@@ -336,8 +368,9 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTipItem(String num, String text) {
     return Padding(

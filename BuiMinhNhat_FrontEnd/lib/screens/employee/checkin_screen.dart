@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../services/attendance_service.dart';
+import '../../services/auth_service.dart';
 import '../../services/camera_service.dart';
 import '../../services/location_service.dart';
 import '../../widgets/custom_button.dart';
@@ -105,6 +106,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
         note: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
         photoFile: _selfieFile,
       );
+
+      if (result['streakCount'] != null && result['totalPoints'] != null) {
+        await AuthService.updateStreakAndPoints(
+          result['streakCount'] as int,
+          result['totalPoints'] as int,
+        );
+      }
 
       if (mounted) {
         setState(() => _isSubmitting = false);

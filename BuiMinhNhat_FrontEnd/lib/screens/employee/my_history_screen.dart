@@ -8,21 +8,23 @@ class MyHistoryScreen extends StatefulWidget {
   const MyHistoryScreen({super.key});
 
   @override
-  State<MyHistoryScreen> createState() => _MyHistoryScreenState();
+  State<MyHistoryScreen> createState() => MyHistoryScreenState();
 }
 
-class _MyHistoryScreenState extends State<MyHistoryScreen> {
+class MyHistoryScreenState extends State<MyHistoryScreen> {
   List<AttendanceRecordModel> _records = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    loadHistory();
   }
 
-  Future<void> _loadHistory() async {
-    setState(() => _isLoading = true);
+  Future<void> loadHistory() async {
+    if (_records.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     try {
       final list = await AttendanceService.getMyHistory();
       if (mounted) {
@@ -93,7 +95,7 @@ class _MyHistoryScreenState extends State<MyHistoryScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _loadHistory,
+      onRefresh: loadHistory,
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: _records.length,

@@ -8,10 +8,10 @@ class AllAttendanceScreen extends StatefulWidget {
   const AllAttendanceScreen({super.key});
 
   @override
-  State<AllAttendanceScreen> createState() => _AllAttendanceScreenState();
+  State<AllAttendanceScreen> createState() => AllAttendanceScreenState();
 }
 
-class _AllAttendanceScreenState extends State<AllAttendanceScreen> {
+class AllAttendanceScreenState extends State<AllAttendanceScreen> {
   List<AttendanceRecordModel> _records = [];
   bool _isLoading = true;
   String? _statusFilter;
@@ -19,11 +19,13 @@ class _AllAttendanceScreenState extends State<AllAttendanceScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAllRecords();
+    loadAllRecords();
   }
 
-  Future<void> _loadAllRecords() async {
-    setState(() => _isLoading = true);
+  Future<void> loadAllRecords() async {
+    if (_records.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     try {
       final list = await AttendanceService.getAllRecords(status: _statusFilter);
       if (mounted) {
@@ -36,6 +38,8 @@ class _AllAttendanceScreenState extends State<AllAttendanceScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  Future<void> _loadAllRecords() => loadAllRecords();
 
   void _showImageDialog(String imageUrl) {
     showDialog(

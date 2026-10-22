@@ -106,7 +106,7 @@ namespace BuiMinhNhat_BackEnd.Data
                 adminUser = new ApplicationUser
                 {
                     UserName = "admin",
-                    Email = "admin@company.com",
+                    Email = "buiminhnhat2910@gmail.com",
                     FullName = "Bùi Minh Nhật (Admin)",
                     Initials = "BMN",
                     EmailConfirmed = true,

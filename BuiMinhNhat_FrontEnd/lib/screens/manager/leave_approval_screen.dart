@@ -7,10 +7,10 @@ class LeaveApprovalScreen extends StatefulWidget {
   const LeaveApprovalScreen({super.key});
 
   @override
-  State<LeaveApprovalScreen> createState() => _LeaveApprovalScreenState();
+  State<LeaveApprovalScreen> createState() => LeaveApprovalScreenState();
 }
 
-class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
+class LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
   List<LeaveRequestModel> _requests = [];
   bool _isLoading = true;
   String? _statusFilter;
@@ -18,11 +18,13 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
   @override
   void initState() {
     super.initState();
-    _loadAllRequests();
+    loadAllRequests();
   }
 
-  Future<void> _loadAllRequests() async {
-    setState(() => _isLoading = true);
+  Future<void> loadAllRequests() async {
+    if (_requests.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     try {
       final list = await LeaveService.getAllRequests(status: _statusFilter);
       if (mounted) {
@@ -35,6 +37,8 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
+  Future<void> _loadAllRequests() => loadAllRequests();
 
   void _showReviewDialog(LeaveRequestModel request, String targetStatus) {
     final noteController = TextEditingController();
@@ -51,7 +55,12 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
               color: isApprove ? Colors.green : Colors.red,
             ),
             const SizedBox(width: 8),
-            Text(isApprove ? 'Duyệt Đơn Nghỉ Phép' : 'Từ Chối Đơn Nghỉ Phép'),
+            Expanded(
+              child: Text(
+                isApprove ? 'Duyệt Đơn Nghỉ Phép' : 'Từ Chối Đơn Nghỉ Phép',
+                style: const TextStyle(fontSize: 18),
+              ),
+            ),
           ],
         ),
         content: Column(

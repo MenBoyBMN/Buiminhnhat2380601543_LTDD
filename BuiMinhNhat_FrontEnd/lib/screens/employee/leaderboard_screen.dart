@@ -6,21 +6,23 @@ class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
 
   @override
-  State<LeaderboardScreen> createState() => _LeaderboardScreenState();
+  State<LeaderboardScreen> createState() => LeaderboardScreenState();
 }
 
-class _LeaderboardScreenState extends State<LeaderboardScreen> {
+class LeaderboardScreenState extends State<LeaderboardScreen> {
   List<LeaderboardItemModel> _leaderboard = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadLeaderboard();
+    loadLeaderboard();
   }
 
-  Future<void> _loadLeaderboard() async {
-    setState(() => _isLoading = true);
+  Future<void> loadLeaderboard() async {
+    if (_leaderboard.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     try {
       final list = await AttendanceService.getLeaderboard();
       if (mounted) {
@@ -41,7 +43,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _loadLeaderboard,
+      onRefresh: loadLeaderboard,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [

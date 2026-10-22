@@ -113,7 +113,8 @@ namespace BuiMinhNhat_BackEnd.Controllers
             var otpCode = new Random().Next(100000, 999999).ToString();
             user.OtpCode = otpCode;
             user.OtpExpiry = DateTime.UtcNow.AddMinutes(5); // Hiệu lực 5 phút
-            await _userManager.UpdateAsync(user);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
 
             // Gửi OTP qua Email
             await _emailService.SendOtpEmailAsync(user.Email ?? "", user.FullName, otpCode);
@@ -140,6 +141,12 @@ namespace BuiMinhNhat_BackEnd.Controllers
 
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user == null)
+            {
+                // Thử tìm theo Email nếu đầu vào là Email
+                user = await _userManager.FindByEmailAsync(model.UserName);
+            }
+
+            if (user == null)
                 return NotFound(new { message = "Không tìm thấy người dùng!" });
 
             if (string.IsNullOrEmpty(user.OtpCode) || user.OtpCode != model.OtpCode)
@@ -155,7 +162,8 @@ namespace BuiMinhNhat_BackEnd.Controllers
             // Xóa mã OTP sau khi xác thực thành công
             user.OtpCode = null;
             user.OtpExpiry = null;
-            await _userManager.UpdateAsync(user);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
 
             // Lấy Roles và thông tin phòng ban
             var roles = await _userManager.GetRolesAsync(user);

@@ -97,6 +97,40 @@ class AuthService {
     return null;
   }
 
+  /// Lấy thông tin cá nhân mới nhất từ server và đồng bộ vào SharedPreferences
+  static Future<UserModel?> fetchProfile() async {
+    try {
+      final response = await ApiService.get('/api/Authenticate/profile');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final user = UserModel.fromJson(data);
+        await saveStoredUser(user);
+        return user;
+      }
+    } catch (_) {}
+    return await getStoredUser();
+  }
+
+  /// Cập nhật nhanh streakCount và totalPoints vào cached user
+  static Future<void> updateStreakAndPoints(int streakCount, int totalPoints) async {
+    final current = await getStoredUser();
+    if (current != null) {
+      final updated = UserModel(
+        id: current.id,
+        userName: current.userName,
+        email: current.email,
+        fullName: current.fullName,
+        initials: current.initials,
+        role: current.role,
+        departmentId: current.departmentId,
+        departmentName: current.departmentName,
+        streakCount: streakCount,
+        totalPoints: totalPoints,
+      );
+      await saveStoredUser(updated);
+    }
+  }
+
   /// Đăng xuất khỏi hệ thống
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();

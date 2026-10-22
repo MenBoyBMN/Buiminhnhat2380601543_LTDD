@@ -37,6 +37,7 @@ class _DepartmentCrudScreenState extends State<DepartmentCrudScreen> {
   }
 
   void _showAddEditDialog({DepartmentModel? existing}) {
+    final formKey = GlobalKey<FormState>();
     final nameCtrl = TextEditingController(text: existing?.name ?? '');
     final descCtrl = TextEditingController(text: existing?.description ?? '');
     final addrCtrl = TextEditingController(text: existing?.officeAddress ?? '280 An Dương Vương, P4, Q5, TP.HCM');
@@ -44,6 +45,7 @@ class _DepartmentCrudScreenState extends State<DepartmentCrudScreen> {
     final lngCtrl = TextEditingController(text: existing?.longitude.toString() ?? '106.682258');
     final radiusCtrl = TextEditingController(text: existing?.radiusMeters.toString() ?? '300.0');
     bool isSaving = false;
+    String? dialogError;
 
     showModalBottomSheet(
       context: context,
@@ -60,68 +62,149 @@ class _DepartmentCrudScreenState extends State<DepartmentCrudScreen> {
                 bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
               child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      existing == null ? 'Thêm Phòng Ban Mới' : 'Cập Nhật Phòng Ban',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextField(controller: nameCtrl, label: 'Tên phòng ban'),
-                    const SizedBox(height: 12),
-                    CustomTextField(controller: descCtrl, label: 'Mô tả nhiệm vụ'),
-                    const SizedBox(height: 12),
-                    CustomTextField(controller: addrCtrl, label: 'Địa chỉ văn phòng'),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: CustomTextField(controller: latCtrl, label: 'Vĩ độ (Lat)', keyboardType: TextInputType.number)),
-                        const SizedBox(width: 8),
-                        Expanded(child: CustomTextField(controller: lngCtrl, label: 'Kinh độ (Lng)', keyboardType: TextInputType.number)),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            existing == null ? 'Thêm Phòng Ban Mới' : 'Cập Nhật Phòng Ban',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      if (dialogError != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.red.shade200),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  dialogError!,
+                                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                       ],
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextField(controller: radiusCtrl, label: 'Bán kính Geofence (mét)', keyboardType: TextInputType.number),
-                    const SizedBox(height: 20),
-                    CustomButton(
-                      text: existing == null ? 'Tạo Phòng Ban' : 'Lưu Thay Đổi',
-                      isLoading: isSaving,
-                      onPressed: () async {
-                        if (nameCtrl.text.trim().isEmpty) return;
-                        setSheetState(() => isSaving = true);
-
-                        final dept = DepartmentModel(
-                          id: existing?.id ?? 0,
-                          name: nameCtrl.text.trim(),
-                          description: descCtrl.text.trim(),
-                          officeAddress: addrCtrl.text.trim(),
-                          latitude: double.tryParse(latCtrl.text) ?? 10.759917,
-                          longitude: double.tryParse(lngCtrl.text) ?? 106.682258,
-                          radiusMeters: double.tryParse(radiusCtrl.text) ?? 300.0,
-                        );
-
-                        final messenger = ScaffoldMessenger.of(context);
-                        final nav = Navigator.of(ctx);
-
-                        try {
-                          if (existing == null) {
-                            await DepartmentService.create(dept);
-                          } else {
-                            await DepartmentService.update(existing.id, dept);
+                      CustomTextField(
+                        controller: nameCtrl,
+                        label: 'Tên phòng ban',
+                        hint: 'VD: Phòng Kỹ Thuật, Phòng Kế Toán...',
+                        prefixIcon: Icons.apartment,
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return 'Vui lòng nhập tên phòng ban!';
                           }
-                          nav.pop();
-                          _loadDepartments();
-                        } catch (e) {
-                          setSheetState(() => isSaving = false);
-                          messenger.showSnackBar(
-                            SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        controller: descCtrl,
+                        label: 'Mô tả nhiệm vụ',
+                        prefixIcon: Icons.description_outlined,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        controller: addrCtrl,
+                        label: 'Địa chỉ văn phòng',
+                        prefixIcon: Icons.location_on_outlined,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              controller: latCtrl,
+                              label: 'Vĩ độ (Lat)',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: CustomTextField(
+                              controller: lngCtrl,
+                              label: 'Kinh độ (Lng)',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        controller: radiusCtrl,
+                        label: 'Bán kính Geofence (mét)',
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 20),
+                      CustomButton(
+                        text: existing == null ? 'Tạo Phòng Ban' : 'Lưu Thay Đổi',
+                        isLoading: isSaving,
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) {
+                            return;
+                          }
+                          setSheetState(() {
+                            isSaving = true;
+                            dialogError = null;
+                          });
+
+                          final dept = DepartmentModel(
+                            id: existing?.id ?? 0,
+                            name: nameCtrl.text.trim(),
+                            description: descCtrl.text.trim(),
+                            officeAddress: addrCtrl.text.trim(),
+                            latitude: double.tryParse(latCtrl.text) ?? 10.759917,
+                            longitude: double.tryParse(lngCtrl.text) ?? 106.682258,
+                            radiusMeters: double.tryParse(radiusCtrl.text) ?? 300.0,
                           );
-                        }
-                      },
-                    ),
-                  ],
+
+                          final messenger = ScaffoldMessenger.of(context);
+                          final nav = Navigator.of(ctx);
+
+                          try {
+                            if (existing == null) {
+                              await DepartmentService.create(dept);
+                            } else {
+                              await DepartmentService.update(existing.id, dept);
+                            }
+                            nav.pop();
+                            _loadDepartments();
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(existing == null ? 'Đã thêm phòng ban thành công!' : 'Đã cập nhật phòng ban!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } catch (e) {
+                            setSheetState(() {
+                              isSaving = false;
+                              dialogError = e.toString().replaceAll('Exception: ', '');
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
